@@ -2,27 +2,6 @@ import net.sf.javabdd.BDD
 import net.sf.javabdd.BDDFactory
 
 
-object Test extends BDDUtil{
-  def main() = {
-    //    println("hello ILP BDD project")
-    val b = BDDFactory.init(1000,1000)
-    b.setVarNum(10);
-    val v1 = b.ithVar(0)
-    val v2 = b.ithVar(1)
-    val v3 = b.ithVar(2)
-    val v4 = b.ithVar(3)
-    val v5 = b.ithVar(5)
-
-    val c1 = v1.and(v2)
-    val c2 = c1.or(v3)
-    val c = seqOr(List(c1,v3,v4))
-    val d = v5.or(c)
-//    val d = c.or(v4)
-    d.printDot()
-    d.printSet()
-  }
-}
-
 abstract class Num{
   def abs(): Int
   def isVar(): Boolean
@@ -190,18 +169,45 @@ object Main extends BDDUtil{
   val c12 = DefClause(pssx,psx)
   val c13 = DefClause(pssx,px,psx)
 
-
   val clauses = List(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13)
-  val prop_vars = ('a' to 'z').toList.take(14)
-
-
 
   def main(args: Array[String]) = {
     val atom_to_bdd_map = BDDMain.buildILPBDD(atoms,clauses,positives,negatives)
     val positive_bdds = positives.map{p => atom_to_bdd_map(p)}
-    val negative_bdds = negatives.map{p => atom_to_bdd_map(p)}.map{bdd => bdd.not}
+    val negative_bdds = negatives.map{p => atom_to_bdd_map(p).not}
     val bdd_solution = seqAnd(positive_bdds).and(seqAnd(negative_bdds))
+    println("==================================================")
+    println("atom_bdds")
+    for{atom <- atoms} {
+      println(atom)
+      atom_to_bdd_map(atom).printDot
+    }
+
+    println("=================================================")
+    println("solution BDD")
     bdd_solution.printDot()
     println("completed")
+  }
+}
+
+
+object Test extends BDDUtil{
+  def main() = {
+    //    println("hello ILP BDD project")
+    val b = BDDFactory.init(1000,1000)
+    b.setVarNum(10);
+    val v1 = b.ithVar(0)
+    val v2 = b.ithVar(1)
+    val v3 = b.ithVar(2)
+    val v4 = b.ithVar(3)
+    val v5 = b.ithVar(5)
+
+    val c1 = v1.and(v2)
+    val c2 = c1.or(v3)
+    val c = seqOr(List(c1,v3,v4))
+    val d = v5.or(c)
+//    val d = c.or(v4)
+    d.printDot()
+    d.printSet()
   }
 }
