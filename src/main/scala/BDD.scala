@@ -30,10 +30,12 @@ trait BDDUtil{
 
 object BDDMain extends BDDUtil{
   // class(dog,mammal)
-  def dataToBDD(data: Map[String,Term], clauses: List[DefiniteClause], b: BDDFactory): BDD = {
-    val dep_clauses = PredicateLogic.getDependentClauses(data,clauses)
+  def dataToBDD(data: RelationalData, clauses: List[DefiniteClause], b: BDDFactory): BDD = {
+    val attrs_data = data.attrs
+    val dep_clauses = PredicateLogic.getDependentClauses(attrs_data,clauses)
     val indexes = dep_clauses.map{c => clauses.indexOf(c)}
     val nodes = indexes.map{i => b.ithVar(i)}
-    seqOr(nodes.toSeq)
+    val bdd = seqOr(nodes.toSeq)
+    bdd
   }
 }
