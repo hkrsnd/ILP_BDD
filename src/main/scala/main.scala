@@ -1,7 +1,7 @@
 import net.sf.javabdd.BDD
 import net.sf.javabdd.BDDFactory
 
-
+/*
 abstract class Num{
   def abs(): Int
   def isVar(): Boolean
@@ -149,27 +149,20 @@ object Main extends BDDUtil{
   val px = new Atom(new Var("x"))
   val psx = new Atom(new Var("sx"))
   val pssx = new Atom(new Var("ssx"))
-  val atoms = List(px,p0,psx,p1,pssx,p2)
+  val atoms = List(p0,p1,p2)
 
   val positives = List(p0, p2)
   val negatives = List(p1)
 
   val c0 = DefClause(p0)
-  val c1 = DefClause(px)
-  val c2 = DefClause(p1)
-  val c3 = DefClause(p1,p0)
-  val c4 = DefClause(psx)
-  val c5 = DefClause(psx,px)
-  val c6 = DefClause(psx,px,p0)
-  val c7 = DefClause(p2)
-  val c8 = DefClause(p2,p0)
-  val c9 = DefClause(p2,p1)
-  val c10 = DefClause(p2,p0,p1)
-  val c11 = DefClause(pssx)
-  val c12 = DefClause(pssx,psx)
-  val c13 = DefClause(pssx,px,psx)
+  val c1 = DefClause(p1)
+  val c2 = DefClause(p1,p0)
+  val c3 = DefClause(p2)
+  val c4 = DefClause(p2,p0)
+  val c5 = DefClause(p2,p1)
+  val c6 = DefClause(p2,p0,p1)
 
-  val clauses = List(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13)
+  val clauses = List(c0,c1,c2,c3,c4,c5,c6)
 
   def main(args: Array[String]) = {
     val atom_to_bdd_map = BDDMain.buildILPBDD(atoms,clauses,positives,negatives)
@@ -183,7 +176,7 @@ object Main extends BDDUtil{
       atom_to_bdd_map(atom).printDot
     }
 
-    println("=================================================")
+    println("==================================================")
     println("solution BDD")
     bdd_solution.printDot()
     println("completed")
@@ -195,7 +188,7 @@ object Test extends BDDUtil{
   def main() = {
     //    println("hello ILP BDD project")
     val b = BDDFactory.init(1000,1000)
-    b.setVarNum(10);
+    b.setVarNum(10)
     val v1 = b.ithVar(0)
     val v2 = b.ithVar(1)
     val v3 = b.ithVar(2)
@@ -210,4 +203,27 @@ object Test extends BDDUtil{
     d.printDot()
     d.printSet()
   }
+
+  def test1() = {
+    val b = BDDFactory.init(1000,1000)
+    b.setVarNum(9)
+    val v0 = b.ithVar(0)
+    val v1 = b.ithVar(1)
+    val v2 = b.ithVar(2)
+    val v3 = b.ithVar(3)
+    val v4 = b.ithVar(4)
+    val v5 = b.ithVar(5)
+    val v6 = b.ithVar(6)
+    val v7 = b.ithVar(7)
+    val v8 = b.ithVar(8)
+
+
+    val f_dog = v0.or(v1).or(v3).or(v5)
+    val f_dolphin = v0.or(v2).or(v3).or(v7)
+    val f_shark = v0.or(v2).or(v4).or(v8)
+
+    val solution = f_dog.and(f_dolphin).and(f_shark.not)
+    solution.printDot
+  }
 }
+ */
