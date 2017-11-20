@@ -29,7 +29,6 @@ case class DefiniteClause(head: PredicateSymbol , body: PredicateSymbol*)
 
 trait SetUtil {
   def seqCartesianProduct[A](sets: Seq[Set[A]]): Seq[Seq[A]] = {
-
     def _seqCartesianProduct[B](sets: Seq[Set[B]], product: Seq[Seq[B]]): Seq[Seq[B]] = {
       if(sets.length == 0){
         product
@@ -43,11 +42,7 @@ trait SetUtil {
         _seqCartesianProduct(sets.tail, new_product)
       }
     }
-
-    sets.length match{
-//      case 1 => sets // setならそのまま
-      case _ => _seqCartesianProduct(sets, Seq(Seq()))
-    }
+    _seqCartesianProduct(sets, Seq(Seq()))
   }
 
   def powerSet[A](s:TraversableOnce[A]) = s.foldLeft(Set(Set.empty[A])) {
@@ -81,7 +76,7 @@ object PredicateLogic extends SetUtil{
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}
     }
-    key_and_values_powerset.foreach{println(_)}
+//    key_and_values_powerset.foreach{println(_)}
 
     val counted_clauses = key_and_values_powerset.map{key_values_tuple_set =>
       val keys_seq = key_values_tuple_set.map{_._1}.toSeq
@@ -100,7 +95,6 @@ object PredicateLogic extends SetUtil{
     counted_clauses.map{ ls =>
       ls.map{vec => result_set += vec}
     }
-
 //    println(counted_clauses)
     result_set
   }
@@ -114,6 +108,8 @@ object PredicateLogic extends SetUtil{
       body: _*)}
   }
 }
+
+
 
 object PredicateTest extends BDDUtil with SetUtil{
   import PredicateLogic._
@@ -145,9 +141,6 @@ object PredicateTest extends BDDUtil with SetUtil{
     positive_bdd.and(negative_bdd)
   }
 
-  def test4() = {
-    BDDMain.buildBDDFromRelationalData("resource/data/tic-tac-toe.data","resource/data/tic-tac-toe.values","positice",2)
-  }
 
   def test5() = {
     val m = Seq(Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")))
