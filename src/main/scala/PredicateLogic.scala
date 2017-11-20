@@ -28,22 +28,25 @@ case class DefiniteClause(head: PredicateSymbol , body: PredicateSymbol*)
 
 
 trait SetUtil {
-  def seqCartesianProduct[A](sets: Seq[Set[A]]): Seq[Set[A]] = {
-    def _seqCartesianProduct[B](sets: Seq[Set[B]], product: Seq[Set[B]]): Seq[Set[B]] = {
+  def seqCartesianProduct[A](sets: Seq[Set[A]]): Seq[Seq[A]] = {
+
+    def _seqCartesianProduct[B](sets: Seq[Set[B]], product: Seq[Seq[B]]): Seq[Seq[B]] = {
       if(sets.length == 0){
         product
       } else{
         val new_product = for{
-          x <- product // x: set[A]
+          x <- product // x: seq[A]
           y  <- sets.head // y: A
-        } yield x + y
+        } yield {
+          x :+ y
+        }
         _seqCartesianProduct(sets.tail, new_product)
       }
     }
 
     sets.length match{
 //      case 1 => sets // setならそのまま
-      case _ => _seqCartesianProduct(sets, Seq(Set()))
+      case _ => _seqCartesianProduct(sets, Seq(Seq()))
     }
   }
 
@@ -72,19 +75,20 @@ object PredicateLogic extends SetUtil{
   = {
     val keys = attr_to_possible_values.map{_._1}
     val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
+
+
     val key_and_values_powerset: Set[Set[(String,Set[Const])]] = key_powerset.map{key_set =>
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}
     }
+    key_and_values_powerset.foreach{println(_)}
 
     val counted_clauses = key_and_values_powerset.map{key_values_tuple_set =>
       val keys_seq = key_values_tuple_set.map{_._1}.toSeq
-      val possible_values_seq = key_values_tuple_set.map{_._2}.toSeq
-      val product = seqCartesianProduct(possible_values_seq).map{_.toList}
+      val possible_values_seq = key_values_tuple_set.toSeq.map{_._2}
 
-//      val attr_num = keys_seq.size
-
-      product.map{values => 
+      val product = seqCartesianProduct(possible_values_seq)
+      product.map{values =>
         (0 to values.length-1).map{i =>
           PredicateSymbol(keys_seq(i), Var("x"), values(i))
         }
@@ -97,6 +101,7 @@ object PredicateLogic extends SetUtil{
       ls.map{vec => result_set += vec}
     }
 
+//    println(counted_clauses)
     result_set
   }
 
@@ -110,11 +115,44 @@ object PredicateLogic extends SetUtil{
   }
 }
 
-object PredicateTest extends BDDUtil{
+object PredicateTest extends BDDUtil with SetUtil{
   import PredicateLogic._
-
   import net.sf.javabdd.BDD
   import net.sf.javabdd.BDDFactory
+
+  def test3() = {
+    val datas = IO.importData("resource/data/mammal.data")
+//    println(datas)
+    val possible_values = IO.importPossibleValues("resource/data/mammal.values")
+
+    val clauses = generateCountedDefiniteClauses(3,possible_values,"positive")
+      .toList.sortWith{(x,y) => x.body.length < y.body.length }
+
+
+    val b = BDDFactory.init(10000,10000)
+    b.setVarNum(clauses.size)
+    //    getDependentClauses(datas.head, clauses).map{println(_)}
+    val label_bdds = datas.map{data =>
+      (data.label, BDDMain.dataToBDD(data,clauses,b))}
+
+    val positive_bdds = label_bdds.filter{lb => lb._1 == "positive"}.map{lb => lb._2}
+    val negative_bdds = label_bdds.filter{lb => lb._1 != "positive"}.map{lb => lb._2.not}
+
+    val positive_bdd = seqAnd(positive_bdds)
+    val negative_bdd = seqAnd(negative_bdds)
+
+    clauses.foreach{println(_)}
+    positive_bdd.and(negative_bdd)
+  }
+
+  def test4() = {
+    BDDMain.buildBDDFromRelationalData("resource/data/tic-tac-toe.data","resource/data/tic-tac-toe.values","positice",2)
+  }
+
+  def test5() = {
+    val m = Seq(Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")),Set(Const("o"), Const("x"), Const("b")))
+    seqCartesianProduct(m)
+  }
 
 
 /*
@@ -131,30 +169,10 @@ object PredicateTest extends BDDUtil{
 
     generateCountedDefiniteClauses(2,attr_to_possible_values,"positive")
   }
+
+
+}
  */
-  def test3() = {
-    val datas = IO.importData("resource/data/mammal.data")
-    val possible_values = IO.importPossibleValues("resource/data/mammal.values")
-    val clauses = generateCountedDefiniteClauses(2,possible_values,"positive")
-      .toList.sortWith{(x,y) => x.body.length < y.body.length }
-
-
-    val b = BDDFactory.init(1000,1000)
-    b.setVarNum(clauses.size)
-    //    getDependentClauses(datas.head, clauses).map{println(_)}
-    val label_bdds = datas.map{data =>
-      (data.label, BDDMain.dataToBDD(data,clauses,b))}
-
-    val positive_bdds = label_bdds.filter{lb => lb._1 == "positive"}.map{lb => lb._2}
-    val negative_bdds = label_bdds.filter{lb => lb._1 != "positive"}.map{lb => lb._2.not}
-
-    val positive_bdd = seqAnd(positive_bdds)
-    val negative_bdd = seqAnd(negative_bdds)
-
-    clauses.foreach{println(_)}
-    positive_bdd.and(negative_bdd)
-  }}
-
 
 /*
   def test1() = {
@@ -185,3 +203,4 @@ object PredicateTest extends BDDUtil{
   }
 */
 
+}

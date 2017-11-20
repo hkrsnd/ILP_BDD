@@ -38,4 +38,26 @@ object BDDMain extends BDDUtil{
     val bdd = seqOr(nodes.toSeq)
     bdd
   }
+
+  def buildBDDFromRelationalData(data_filepath:String, values_filepath: String, positive_symbol: String, body_length: Int) = {
+    val datas = IO.importData(data_filepath)
+    val possible_values = IO.importPossibleValues(values_filepath)
+    val clauses = PredicateLogic.generateCountedDefiniteClauses(body_length,possible_values,positive_symbol)
+      .toList.sortWith{(x,y) => x.body.length < y.body.length }
+
+    val b = BDDFactory.init(10000,10000)
+    b.setVarNum(clauses.size)
+    //    getDependentClauses(datas.head, clauses).map{println(_)}
+    val label_bdds = datas.map{data =>
+      (data.label, BDDMain.dataToBDD(data,clauses,b))}
+
+    val positive_bdds = label_bdds.filter{lb => lb._1 == positive_symbol}.map{lb => lb._2}
+    val negative_bdds = label_bdds.filter{lb => lb._1 != positive_symbol}.map{lb => lb._2.not}
+
+    val positive_bdd = seqAnd(positive_bdds)
+    val negative_bdd = seqAnd(negative_bdds)
+
+    clauses.foreach{println(_)}
+    positive_bdd.and(negative_bdd)
+  }
 }
