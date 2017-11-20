@@ -76,7 +76,6 @@ object PredicateLogic extends SetUtil{
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}
     }
-//    key_and_values_powerset.foreach{println(_)}
 
     val counted_clauses = key_and_values_powerset.map{key_values_tuple_set =>
       val keys_seq = key_values_tuple_set.map{_._1}.toSeq
@@ -95,7 +94,6 @@ object PredicateLogic extends SetUtil{
     counted_clauses.map{ ls =>
       ls.map{vec => result_set += vec}
     }
-//    println(counted_clauses)
     result_set
   }
 

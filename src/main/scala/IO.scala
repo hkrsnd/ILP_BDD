@@ -4,6 +4,7 @@ object IO {
   /*
    data file format
    first line: attr_name_1, ..., attr_name_n, positive_class_name
+   second line: n (n is a class column number)
    last lines: attr_value, ..., attr_value, class
    */
   def importData(filepath: String): List[RelationalData] = {
@@ -19,7 +20,6 @@ object IO {
 
     val attr_values_list = lastlines.map{line => line.split(",").toList}
     val attr_num = attr_values_list(0).length - 1
-
 
     attr_values_list.map{attr_values =>
       var attr_name_to_value_map: Map[String,Const] = Map.empty

@@ -29,7 +29,6 @@ trait BDDUtil{
 }
 
 object BDDMain extends BDDUtil{
-  // class(dog,mammal)
   def dataToBDD(data: RelationalData, clauses: List[DefiniteClause], b: BDDFactory): BDD = {
     val attrs_data = data.attrs
     val dep_clauses = PredicateLogic.getDependentClauses(attrs_data,clauses)
@@ -40,22 +39,14 @@ object BDDMain extends BDDUtil{
   }
 
   def buildBDDFromRelationalData(datas: List[RelationalData], possible_values: Map[String, Set[Const]], clauses: List[DefiniteClause], positive_symbol: String, body_length: Int) = {
-
     val b = BDDFactory.init(1000000,1000000)
     b.setVarNum(clauses.size)
-    //    getDependentClauses(datas.head, clauses).map{println(_)}
     val label_bdds = datas.map{data =>
       (data.label, BDDMain.dataToBDD(data,clauses,b))}
-
     val positive_bdds = label_bdds.filter{lb => lb._1 == positive_symbol}.map{lb => lb._2}
     val negative_bdds = label_bdds.filter{lb => lb._1 != positive_symbol}.map{lb => lb._2.not}
-
     val positive_bdd = seqAnd(positive_bdds)
     val negative_bdd = seqAnd(negative_bdds)
-
-//    clauses.foreach{println(_)}
-
-
     positive_bdd.and(negative_bdd)
   }
 }
