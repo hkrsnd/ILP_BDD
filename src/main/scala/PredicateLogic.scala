@@ -70,8 +70,6 @@ object PredicateLogic extends SetUtil{
   = {
     val keys = attr_to_possible_values.map{_._1}
     val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
-
-
     val key_and_values_powerset: Set[Set[(String,Set[Const])]] = key_powerset.map{key_set =>
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}

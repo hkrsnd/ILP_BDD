@@ -4,7 +4,7 @@ import net.sf.javabdd.BDDFactory
 trait BDDUtil{
   def seqAnd(bdds: Seq[BDD]): BDD = {
     def seqAndLoop(bdds: Seq[BDD], result: BDD): BDD = {
-      if(bdds == List())
+      if(bdds.length == 0)
         result
       else{
         val bdd = bdds.head
@@ -16,7 +16,7 @@ trait BDDUtil{
   }
   def seqOr(bdds: Seq[BDD]): BDD = {
     def seqOrLoop(bdds: Seq[BDD], result: BDD): BDD = {
-      if(bdds == List())
+      if(bdds.length == 0)
         result
       else{
         val bdd = bdds.head
