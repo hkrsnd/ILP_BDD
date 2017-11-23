@@ -48,6 +48,14 @@ trait SetUtil {
   def powerSet[A](s:TraversableOnce[A]) = s.foldLeft(Set(Set.empty[A])) {
     (set, element) => set union (set map (_ + element))
   }
+
+  def powerSetWithSize[A](s: TraversableOnce[A], size: Int) = {
+    s.foldLeft(Set(Set.empty[A])) {
+      (set, element) =>
+      println(element)
+      val newset = set.filter{x => x.size <= size}
+      newset union (newset map (_ + element))}
+  }
 }
 
 
@@ -69,7 +77,8 @@ object PredicateLogic extends SetUtil{
   def generateCountedDefiniteClauseBodies(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String): Set[Seq[PredicateSymbol]]
   = {
     val keys = attr_to_possible_values.map{_._1}
-    val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
+//    val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
+    val key_powerset = powerSetWithSize(keys,body_length).filter{x => x.size <= body_length}
     val key_and_values_powerset: Set[Set[(String,Set[Const])]] = key_powerset.map{key_set =>
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}
