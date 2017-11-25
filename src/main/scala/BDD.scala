@@ -39,9 +39,13 @@ object BDDMain extends BDDUtil{
   }
 
   def buildBDDFromRelationalData(datas: List[RelationalData], possible_values: Map[String, Set[Const]], clauses: List[DefiniteClause], positive_symbol: String, body_length: Int) = {
-    val b = BDDFactory.init(10000,10000)
+    val b = BDDFactory.init(35000000,35000000)
     b.setVarNum(clauses.size)
+    var i = 0
     val label_bdds = datas.map{data =>
+      print("data")
+      println(i)
+      i += 1
       (data.label, BDDMain.dataToBDD(data,clauses,b))}
     val positive_bdds = label_bdds.filter{lb => lb._1 == positive_symbol}.map{lb => lb._2}
     val negative_bdds = label_bdds.filter{lb => lb._1 != positive_symbol}.map{lb => lb._2.not}

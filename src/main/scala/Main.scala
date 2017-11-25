@@ -9,7 +9,8 @@ object Main {
 
     val possible_values = IO.importPossibleValues(valuefile_path)
 
-    val clauses = PredicateLogic.generateCountedDefiniteClauses(body_length,possible_values,positive_symbol).toList//sortWith{(x,y) => x.body.length < y.body.length }
+    val all_clauses = PredicateLogic.generateCountedDefiniteClauses(body_length,possible_values,positive_symbol).toList//sortWith{(x,y) => x.body.length < y.body.length }
+    val clauses = PredicateLogic.removeDontCareClauses(all_clauses,datas).toList
       (0 to clauses.length-1).map{i =>
         print(i)
         print(": ")
@@ -34,6 +35,7 @@ object Test {
   val tic_value_path = "resource/data/tic-tac-toe.value"
 
   val mushroom_data_path = "resource/data/agaricus-lepiota.data"
+  val mushroom_mini_data_path = "resource/data/agaricus-lepiota-mini.data"
   val mushroom_value_path = "resource/data/agaricus-lepiota.value"
 
   val soybean_small_data_path = "resource/data/soybean-small.data"
@@ -68,12 +70,16 @@ object Test {
     result
   }
 
-  def mushroom_test() = {
-    val datas = IO.importData(mushroom_data_path)
-    val possible_values = IO.importPossibleValues(mushroom_value_path)
-
+  def mushroom_test(body_length: Int) = {
     val start = System.currentTimeMillis
-    val result = Main.buildBDD(mushroom_data_path,mushroom_value_path,"p",2)
+    val result = Main.buildBDD(mushroom_data_path,mushroom_value_path,"e",body_length)
+    println((System.currentTimeMillis - start) + "msec")
+    result
+  }
+
+  def mushroom_mini_test(body_length: Int) = {
+    val start = System.currentTimeMillis
+    val result = Main.buildBDD(mushroom_mini_data_path,mushroom_value_path,"e",body_length)
     println((System.currentTimeMillis - start) + "msec")
     result
   }

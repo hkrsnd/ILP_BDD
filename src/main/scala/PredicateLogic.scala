@@ -104,13 +104,19 @@ object PredicateLogic extends SetUtil{
     result_set
   }
 
-
   def generateCountedDefiniteClauses(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String):Set[DefiniteClause] = {
     val bodies = generateCountedDefiniteClauseBodies(body_length,attr_to_possible_values, positive_class_name)
 
     bodies.map{body =>
       DefiniteClause(PredicateSymbol("class",Var("x"),Const(positive_class_name)),
       body: _*)}
+  }
+
+  def removeDontCareClauses(clauses: List[DefiniteClause], datas: List[RelationalData]): Set[DefiniteClause] = {
+    val empty: Set[DefiniteClause] = Set()
+    datas.map{data =>
+      getDependentClauses(data.attrs,clauses)
+    }.foldLeft(empty){_ union _}
   }
 }
 
