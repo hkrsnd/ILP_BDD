@@ -24,8 +24,9 @@ abstract class Atom
 
 case class PredicateSymbol(name: String, terms: Term*) extends Atom
 
-case class DefiniteClause(head: PredicateSymbol , body: PredicateSymbol*)
+case class DefiniteClause(head: PredicateSymbol, body: PredicateSymbol*)
 
+case class Hypothesis(clauses: List[DefiniteClause])
 
 trait SetUtil {
   def seqCartesianProduct[A](sets: Seq[Set[A]]): Seq[Seq[A]] = {
@@ -104,7 +105,7 @@ object PredicateLogic extends SetUtil{
     result_set
   }
 
-  def generateCountedDefiniteClauses(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String):Set[DefiniteClause] = {
+  def generateCountedDefiniteClauses(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String): Set[DefiniteClause] = {
     val bodies = generateCountedDefiniteClauseBodies(body_length,attr_to_possible_values, positive_class_name)
 
     bodies.map{body =>
@@ -118,14 +119,43 @@ object PredicateLogic extends SetUtil{
       getDependentClauses(data.attrs,clauses)
     }.foldLeft(empty){_ union _}
   }
-}
 
+  def getCoveredDatasByClause(clause: DefiniteClause, data_list: List[RelationalData]): List[RelationalData] = {
+    val body_symbols = clause.body
+    val attrs_tuples = body_symbols.map{x => (x.name, x.terms.last)}
+    data_list.filter{data =>
+      val attr_bools = attrs_tuples.map{x => data.attrs(x._1) == x._2}
+      attr_bools.foldLeft(true){_ && _}
+    }
+  }
+
+  def hypothesisLength(hypo: Hypothesis): Int = {
+    hypo.clauses.map{_.body.length}.foldLeft(0){_ + _}
+  }
+}
 
 
 object PredicateTest extends BDDUtil with SetUtil{
   import PredicateLogic._
   import net.sf.javabdd.BDD
   import net.sf.javabdd.BDDFactory
+
+  def slide_test() = {
+    val b = BDDFactory.init(20,20)
+    b.setVarNum(9)
+    // 0 1 3 5
+    val bdd_dog = b.ithVar(0).or(b.ithVar(1)).or(b.ithVar(3)).or(b.ithVar(5))
+    // 0 2 3 7
+    val bdd_dolphin = b.ithVar(0).or(b.ithVar(2)).or(b.ithVar(3)).or(b.ithVar(7))
+    // 0 2 4 8
+    val bdd_shark = b.ithVar(0).or(b.ithVar(2)).or(b.ithVar(4)).or(b.ithVar(8))
+    val bdd = bdd_dog.and(bdd_dolphin).and(bdd_shark.not)
+
+    bdd_dog.printDot
+    bdd_dolphin.printDot
+    bdd_shark.not.printDot
+    bdd.printDot
+  }
 
   def test3() = {
     val datas = IO.importData("resource/data/mammal.data")
