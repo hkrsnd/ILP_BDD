@@ -85,6 +85,7 @@ object Test extends BDDAlgo{
     println(" assignments")
     val weights = Array(0,1,1,1,1,2,2,2,2)
     minimumWeight(result,weights)
+    result
   }
 
   def tic_tac_toe_test(body_length: Int) = {

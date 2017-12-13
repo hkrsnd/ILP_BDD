@@ -33,56 +33,64 @@ trait BDDUtil{
 }
 
 trait BDDAlgo{
-  def inf = 10000
+  def inf = 99999999
+
   def minimumWeight(bdd: BDD, weights: Array[Int]): Array[Int] = {
-    var mts: Map[BDD,(Int,Boolean)] = Map.empty
-
+    // nodeID -> (m, t)
+    var mts: Map[Int,(Int,Boolean)] = Map.empty
+    
     def minimumWeightLoop(bdd: BDD): Int = {
-
       if(bdd.isZero){
         inf
       }else if(bdd.isOne){
         0
       }else{
-        print("bdd: ")
-        println(bdd.`var`)
-        print(bdd.nodeCount)
-        println(" nodes")
-        val low = bdd.low
-        val high = bdd.high
-        val lw = minimumWeightLoop(low)
-        val hw = minimumWeightLoop(high) + weights(bdd.`var`)
-        if (lw < hw){
-          if(mts.get(bdd) == None)
-            mts += (bdd -> (lw,false))
-          lw
-        } else {
-          if(mts.get(bdd) == None)
-            mts += (bdd -> (hw,true))
-          hw
+        val before_mt = mts.get(bdd.hashCode)
+        before_mt match {
+          // already visited
+          case Some((m,t)) => m
+          // first time
+          case None =>
+            val lw = minimumWeightLoop(bdd.low)
+            val hw = minimumWeightLoop(bdd.high) + weights(bdd.`var`)
+            if(lw < hw){
+              // update mts map
+              mts += (bdd.hashCode -> (lw,false))
+              lw
+            }else{
+              // update mts map
+              mts += (bdd.hashCode -> (hw,true))
+              hw
+          }
         }
       }
     }
-
 
     println("calculate ms ts...")
     // calculate ms ts
     minimumWeightLoop(bdd)
 
     // create x's
+    // init xs = Array(0,0,...,0)
     var xs: Array[Int] = Array.fill(weights.size)(0)
     var tmp_bdd = bdd
 
-    while(!tmp_bdd.isOne){
-      if(mts.getOrElse(tmp_bdd,(0,false))._2){
-        xs(tmp_bdd.`var`) = 1
-        tmp_bdd = tmp_bdd.high
-       }else{
-        xs(tmp_bdd.`var`) = 0
-        tmp_bdd = tmp_bdd.low
-       }
+    // from root to bottom
+    while(!(tmp_bdd.nodeCount == 1)){
+      val mt = mts.get(tmp_bdd.hashCode)
+      mt match {
+        case Some((m,t)) =>
+          if(t){
+            xs(tmp_bdd.`var`) = 1
+            tmp_bdd = tmp_bdd.high
+          }else{
+            xs(tmp_bdd.`var`) = 0
+            tmp_bdd = tmp_bdd.low
+          }
+        case _ => throw new Exception("Internal Error: Invalid mts")
+      }
     }
-    xs
+    return xs
   }
 }
 
