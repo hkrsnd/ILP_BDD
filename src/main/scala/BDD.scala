@@ -37,15 +37,15 @@ trait BDDAlgo{
 
   def minimumWeight(bdd: BDD, weights: Array[Int]): Array[Int] = {
     // nodeID -> (m, t)
-    var mts: Map[Int,(Int,Boolean)] = Map.empty
-    
+    var mts: Map[BDD,(Int,Boolean)] = Map.empty
+
     def minimumWeightLoop(bdd: BDD): Int = {
       if(bdd.isZero){
         inf
       }else if(bdd.isOne){
         0
       }else{
-        val before_mt = mts.get(bdd.hashCode)
+        val before_mt = mts.get(bdd)
         before_mt match {
           // already visited
           case Some((m,t)) => m
@@ -55,11 +55,11 @@ trait BDDAlgo{
             val hw = minimumWeightLoop(bdd.high) + weights(bdd.`var`)
             if(lw < hw){
               // update mts map
-              mts += (bdd.hashCode -> (lw,false))
+              mts += (bdd -> (lw,false))
               lw
             }else{
               // update mts map
-              mts += (bdd.hashCode -> (hw,true))
+              mts += (bdd -> (hw,true))
               hw
           }
         }
@@ -77,7 +77,7 @@ trait BDDAlgo{
 
     // from root to bottom
     while(!(tmp_bdd.nodeCount == 1)){
-      val mt = mts.get(tmp_bdd.hashCode)
+      val mt = mts.get(tmp_bdd)
       mt match {
         case Some((m,t)) =>
           if(t){
