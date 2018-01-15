@@ -134,9 +134,63 @@ object PredicateLogic extends SetUtil{
   }
 }
 
+object NumPredicateLogic extends SetUtil{
+  def literalToInt(num_literal: PredicateSymbol): Int = {
+    num_literal match{
+      case PredicateSymbol(name, Const(num)) => num.toInt
+    }
+  }
+  def intToLiteral(num_int: Int): PredicateSymbol = {
+    PredicateSymbol("p", Const(num_int.toString))
+  }
+
+  def generateAtoms(size: Int): List[PredicateSymbol] = {
+    val ls = Range(0, size).toList
+    ls.map{x => PredicateSymbol("p", Const(x.toString))}
+  }
+
+  def getCountedDefiniteClauses(head_p: PredicateSymbol, clauses: List[DefiniteClause]): List[DefiniteClause] = {
+    clauses.filter{c => c match{
+      case DefiniteClause(head, body @_*) =>
+        head == head_p
+    }}
+  }
+
+  def generateDefiniteClauses(max_num: Int): List[DefiniteClause] = {
+    Range(0, max_num+1).toList.map{ num =>
+      val num_set = Range(0, num).toSet
+      val power_set_list = powerSet(num_set)
+        .map{_.map{s => PredicateSymbol("p", Const(s.toString))}}
+        .map{_.toList}
+        .toList.sortWith{_.length < _.length}
+      power_set_list.map{body_num_list =>
+        DefiniteClause(PredicateSymbol("p", Const(num.toString)), body_num_list: _*)}
+    }.flatten
+  }
+}
+
+object NumPredicateTest extends BDDUtil with SetUtil{
+  import NumPredicateLogic._
+  import BDDMain._
+  import net.sf.javabdd.BDD
+  import net.sf.javabdd.BDDFactory
+
+  def isEven(number: Int) = number % 2 == 0
+  def isOdd(number: Int) = !isEven(number)
+
+  def even_test(size: Int): BDD = {
+
+    val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
+    val clauses = generateDefiniteClauses(size)
+    val b = BDDFactory.init(10000, 10000)
+    b.setVarNum(1000)
+    numsToBDD(b, nums, isEven, clauses)
+  }
+}
 
 object PredicateTest extends BDDUtil with SetUtil{
   import PredicateLogic._
+
   import net.sf.javabdd.BDD
   import net.sf.javabdd.BDDFactory
 
