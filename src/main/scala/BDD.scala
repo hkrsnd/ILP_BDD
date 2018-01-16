@@ -33,6 +33,7 @@ trait BDDUtil{
 trait BDDAlgo{
   def inf = 99999999
 
+
   def minimumWeight(bdd: BDD, weights: Array[Int]): Array[Int] = {
     // BDD -> (m, t)
     var mts: Map[BDD,(Int,Boolean)] = Map.empty

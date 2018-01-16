@@ -191,9 +191,40 @@ object Test extends BDDAlgo{
     result.printDot
   }
 
+
+
   def example1 = {
     val b = BDDFactory.init(10,10)
     b.setVarNum(3)
     (b.ithVar(0).and(b.ithVar(1))).or(b.ithVar(2)).printDot
   }
+}
+
+
+object NumTest extends BDDUtil with SetUtil{
+  import NumPredicateLogic._
+  import BDDMain._
+  import net.sf.javabdd.BDD
+  import net.sf.javabdd.BDDFactory
+
+  def isEven(number: Int) = number % 2 == 0
+  def isOdd(number: Int) = !isEven(number)
+
+  def even_test(size: Int): BDD = {
+    val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
+    val clauses = generateDefiniteClauses(size)
+    println("variables: " + clauses.length.toString)
+    val b = BDDFactory.init(99999999, 99999999)
+    b.setVarNum(clauses.length)
+    numsToBDD(b, nums, isEven, clauses)
+  }
+
+  def even_test_batch = {
+    (1 to 9).map{i =>
+      println(i.toString + "==============")
+      val result = even_test(i)
+      println("assignments: " + result.satCount.toString)
+    }
+  }
+
 }

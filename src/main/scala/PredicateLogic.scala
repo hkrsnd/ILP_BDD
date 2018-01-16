@@ -182,8 +182,8 @@ object NumPredicateTest extends BDDUtil with SetUtil{
 
     val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
     val clauses = generateDefiniteClauses(size)
-    val b = BDDFactory.init(10000, 10000)
-    b.setVarNum(1000)
+    val b = BDDFactory.init(99999999, 99999999)
+    b.setVarNum(clauses.length)
     numsToBDD(b, nums, isEven, clauses)
   }
 }
