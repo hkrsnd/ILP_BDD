@@ -252,7 +252,7 @@ object BDDMain extends BDDUtil with BDDAlgo{
       case PredicateSymbol(name, Const(num)) => !positive_function(num.toInt)}}
       .map{n_lit => num_bdd_map.getOrElse(n_lit, b.zero)}
 
-    positive_bdds.map{_.printDot}
+//    positive_bdds.map{_.printDot}
     seqAnd(positive_bdds).and(seqAnd(negative_bdds.map{_.not}))
   }
 
