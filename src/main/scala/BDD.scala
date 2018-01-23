@@ -75,8 +75,10 @@ trait BDDAlgo{
     var tmp_bdd = bdd
 
     // from root to bottom
-    while(!(tmp_bdd.nodeCount == 1)){
+    while(tmp_bdd.nodeCount > 1){
+      println(tmp_bdd.nodeCount)
       val mt = mts.get(tmp_bdd)
+      println(mt)
       mt match {
         case Some((m,t)) =>
           if(t){
@@ -136,13 +138,14 @@ trait BDDAlgo{
     // ルートから順にたどり, スコアが最良のときの仮説を表すBDDを構築する.
     // パスに現れない変数は仮説に含まれないとする.
     def rootToBottomLoop(bdd: BDD): BDD ={
-      if(bdd.nodeCount == 1){
+      if(bdd.nodeCount == 0){
+        b.one
         // high == Trueのときノードを残す
-        if(bdd.high.isOne)
-          bdd
+//        if(bdd.high.isOne)
+//          bdd
         // high == Falseのときノードを残さない
-        else
-          b.one
+//        else
+//          b.one
       } else {
         val mt = mts.get(bdd)
         mt match {
@@ -151,8 +154,8 @@ trait BDDAlgo{
             if(t == 1){
               (b.ithVar(bdd.`var`)).and(rootToBottomLoop(bdd.high))
             }else if(t == 0){
-              //(b.ithVar(bdd.`var`).not).and(rootToBottomLoop(bdd.low))
-              rootToBottomLoop(bdd.low)
+              (b.ithVar(bdd.`var`).not).and(rootToBottomLoop(bdd.low))
+              //rootToBottomLoop(bdd.low)
             } else{ // t == 2
               (b.ithVar(bdd.`var`)).and(rootToBottomLoop(bdd.high))
                 .or((b.ithVar(bdd.`var`).not).and(rootToBottomLoop(bdd.low)))

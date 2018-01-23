@@ -200,7 +200,7 @@ object NumTest extends BDDUtil with SetUtil{
   def isEven(number: Int) = number % 2 == 0
   def isOdd(number: Int) = !isEven(number)
 
-  def even_test(size: Int): BDD = {
+  def even_test(size: Int, cache_size: Int)= {
     val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
     val clauses = generateDefiniteClauses(size)
     println("clauses: ")
@@ -209,16 +209,96 @@ object NumTest extends BDDUtil with SetUtil{
       println(clauses(i))
     }
     println("variables: " + clauses.length.toString)
-    val b = BDDFactory.init(999999, 999999)
+    val b = BDDFactory.init(cache_size, cache_size)
+    b.setVarNum(clauses.length)
+    val start = System.currentTimeMillis
+    val result = numsToBDD(b, nums, isEven, clauses)
+    println((System.currentTimeMillis - start) + "msec")
+    print("nodes: ")
+    println(result.nodeCount)
+    print("assignments: ")
+    println(result.satCount)
+    result
+  }
+  def even_sample(size: Int, cache_size: Int)= {
+    val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
+    var clauses = generateDefiniteClauses(size).toArray
+    var tmp = clauses(1)
+    clauses(1) = clauses(0)
+    clauses(0) = tmp
+    tmp = clauses(3)
+    clauses(3) = clauses(2)
+    clauses(2) = tmp
+    tmp = clauses(6)
+    clauses(6) = clauses(5)
+    clauses(5) = tmp
+    println("clauses: ")
+    val clauses_ls = clauses.toList
+    (0 to clauses_ls.length - 1).map{i =>
+      print(i.toString + " : ")
+      println(clauses_ls(i))
+    }
+    println("variables: " + clauses.length.toString)
+    val b = BDDFactory.init(cache_size, cache_size)
+    b.setVarNum(clauses.length)
+    val start = System.currentTimeMillis
+    val result = numsToBDD(b, nums, isEven, clauses_ls)
+    println((System.currentTimeMillis - start) + "msec")
+    print("nodes: ")
+    println(result.nodeCount)
+    print("assignments: ")
+    println(result.satCount)
+
+    val weights = clauses_ls.map{c => c.body.size + 1}.toArray
+    weights.map{println(_)}
+/*    val bools = minimumWeight(result,weights)
+
+    (0 to bools.size-1).foreach{i =>
+      if(bools(i) == 1)
+        println(clauses(i))
+ }*/
+    val start_top = System.currentTimeMillis
+    // Array(0,...,1,..,1..,0)
+    val top_result = minimumWeight(result,weights)
+    println("Get Top Hypothesis Time: " + (System.currentTimeMillis - start_top) + "msec")
+    val start_tie = System.currentTimeMillis
+    val tie_result = minimumWeightTai(b,result,weights)
+    println("Tie-BDD Construction Time: " + (System.currentTimeMillis - start_tie) + "msec")
+
+    val best_hyp = clauses_ls.zip(top_result).filter{x => x._2 == 1}.map{_._1}
+    println(best_hyp)
+    println("TOP-TIE BDD")
+    tie_result.printDot
+    tie_result
+  }
+
+  def even_sample2 = {
+    val nums = List(
+      PredicateSymbol("e", Const("0")),
+      PredicateSymbol("e", Const("1")),
+      PredicateSymbol("e", Const("2")))
+    val clauses = List(
+      DefiniteClause(PredicateSymbol("e", Const("0"))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 0))),
+      DefiniteClause(PredicateSymbol("e", Const("1"))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 1))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 1)), PredicateSymbol("e", NumVar("x", 0))),
+      DefiniteClause(PredicateSymbol("e", Const("2"))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 2))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 2)), PredicateSymbol("e", NumVar("x", 0))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 2)), PredicateSymbol("e", NumVar("x", 1))),
+      DefiniteClause(PredicateSymbol("e", NumVar("x", 2)), PredicateSymbol("e", NumVar("x", 0)), PredicateSymbol("e", NumVar("x", 1)))
+    )
+
+    def isEven(number: Int) = number % 2 == 0
+    val b = BDDFactory.init(2000,2000)
     b.setVarNum(clauses.length)
     numsToBDD(b, nums, isEven, clauses)
   }
 
-  def even_test_batch = {
-    (1 to 9).map{i =>
-      println(i.toString + "==============")
-      val result = even_test(i)
-      println("assignments: " + result.satCount.toString)
+  def even_batch_test(size: Int) = {
+    (2 to size).foreach{ s =>
+      even_test(s,1000)
     }
   }
 
