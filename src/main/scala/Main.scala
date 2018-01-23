@@ -70,13 +70,6 @@ object Test extends BDDAlgo{
     println(" assignments")
     val clauses = Main.generateClauses(mammal_data_path,mammal_value_path,"positive",body_length)
     val weights = clauses.map{c => c.body.size}.toArray
-//    val bools = minimumWeight(result,weights)
-
-/*    (0 to bools.size-1).foreach{i =>
-      if(bools(i) == 1)
-        println(clauses(i))
-    }*/
-//    result
     minimumWeightTai(b,result,weights)
   }
 
@@ -92,9 +85,6 @@ object Test extends BDDAlgo{
     val clauses = Main.generateClauses(mammal_data_path,mammal_value_path,"positive",body_length)
     val weights = clauses.map{c => c.body.size}.toArray
     minimumWeightTai(b,result,weights)
-//    val weights = Array(0,1,1,1,1,2,2,2,2)
-//    minimumWeight(result,weights)
-//    result
   }
 
   def tic_tac_toe_test(body_length: Int) = {
@@ -213,8 +203,13 @@ object NumTest extends BDDUtil with SetUtil{
   def even_test(size: Int): BDD = {
     val nums = Range(0,size+1).toList.map{x => intToLiteral(x)}
     val clauses = generateDefiniteClauses(size)
+    println("clauses: ")
+    (0 to clauses.length - 1).map{i =>
+      print(i.toString + " : ")
+      println(clauses(i))
+    }
     println("variables: " + clauses.length.toString)
-    val b = BDDFactory.init(99999999, 99999999)
+    val b = BDDFactory.init(999999, 999999)
     b.setVarNum(clauses.length)
     numsToBDD(b, nums, isEven, clauses)
   }

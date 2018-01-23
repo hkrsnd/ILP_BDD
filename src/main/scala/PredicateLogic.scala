@@ -12,6 +12,8 @@ case class Const(name: String) extends Term
 
 case class Var(name: String) extends Term
 
+case class NumVar(name: String, pre: Int) extends Term
+
 case class PredicateFunction(name: String, terms: Term*) extends Term
 
 /*
@@ -27,6 +29,8 @@ case class PredicateSymbol(name: String, terms: Term*) extends Atom
 case class DefiniteClause(head: PredicateSymbol, body: PredicateSymbol*)
 
 case class Hypothesis(clauses: List[DefiniteClause])
+
+
 
 trait SetUtil {
   def seqCartesianProduct[A](sets: Seq[Set[A]]): Seq[Seq[A]] = {
@@ -135,6 +139,13 @@ object PredicateLogic extends SetUtil{
 }
 
 object NumPredicateLogic extends SetUtil{
+/*  implicit def intToString(n: Int) = {
+    n.toString
+  }
+  implicit def stringToInt(s: String) = {
+    s.toInt
+  }*/
+
   def literalToInt(num_literal: PredicateSymbol): Int = {
     num_literal match{
       case PredicateSymbol(name, Const(num)) => num.toInt
@@ -149,10 +160,44 @@ object NumPredicateLogic extends SetUtil{
     ls.map{x => PredicateSymbol("p", Const(x.toString))}
   }
 
+  def substitute(variable: Atom, value: Int): PredicateSymbol = {
+    variable match{
+      case PredicateSymbol(name, terms @_*) =>
+        terms.head match {
+          case NumVar(var_name, pre) => PredicateSymbol(name, Const((pre + value).toString))
+          case Const(num) => PredicateSymbol(name, Const(num))
+        }
+    }
+  }
+
   def getCountedDefiniteClauses(head_p: PredicateSymbol, clauses: List[DefiniteClause]): List[DefiniteClause] = {
     clauses.filter{c => c match{
       case DefiniteClause(head, body @_*) =>
-        head == head_p
+        head match{
+          case PredicateSymbol(name, Const(num)) => head_p == PredicateSymbol("p", Const(num))
+          case PredicateSymbol(name, NumVar(nv_name, pre)) =>
+            head_p match{
+              case PredicateSymbol(head_p_name, Const(num)) =>
+                // s(s(x)) (pre==2) から s(s(s(0)))は導出できるが s(0)は導出できない
+                num.toInt >= pre
+            }
+        }
+    }}.map{c => c match{
+      // e(s^2(x)) <- e(x) のxに代入を行う
+      case DefiniteClause(head, body @_*) =>
+        head match{
+          case PredicateSymbol(head_name, NumVar(name, pre)) =>
+            head_p match{
+              case PredicateSymbol(head_p_name, Const(num)) =>
+                val subs_value = num.toInt - pre
+                val subs_head = substitute(head, subs_value)
+                val subs_bodies = body.map{b => substitute(b, subs_value)}
+                DefiniteClause(subs_head, subs_bodies: _*)
+                DefiniteClause(head, body: _*)
+            }
+          case PredicateSymbol(head_name, Const(num)) =>
+            DefiniteClause(head, body: _*)
+        }
     }}
   }
 
@@ -160,14 +205,25 @@ object NumPredicateLogic extends SetUtil{
     Range(0, max_num+1).toList.map{ num =>
       val num_set = Range(0, num).toSet
       val power_set_list = powerSet(num_set)
-        .map{_.map{s => PredicateSymbol("p", Const(s.toString))}}
+        //.map{_.map{s => PredicateSymbol("p", Const(s.toString))}}
         .map{_.toList}
         .toList.sortWith{_.length < _.length}
       power_set_list.map{body_num_list =>
-        DefiniteClause(PredicateSymbol("p", Const(num.toString)), body_num_list: _*)}
-    }.flatten
+        if (body_num_list.length > 0){
+          val head_var = NumVar("x", num)
+          val body_var_list = body_num_list.map{body_num => NumVar("x", body_num)}
+          val body_list = body_var_list.map{body_var => PredicateSymbol("p", body_var)}
+          List(DefiniteClause(PredicateSymbol("p", head_var), body_list: _*))
+        } else {
+        val head_var = NumVar("x", num)
+        List(
+          DefiniteClause(PredicateSymbol("p", head_var)),
+          DefiniteClause(PredicateSymbol("p", Const(num.toString))))
+        }}.flatten
+      }.flatten
   }
 }
+
 
 object NumPredicateTest extends BDDUtil with SetUtil{
   import NumPredicateLogic._

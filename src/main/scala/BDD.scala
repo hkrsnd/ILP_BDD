@@ -190,29 +190,6 @@ object BDDMain extends BDDUtil with BDDAlgo{
     val negative_bdd = seqAnd(negative_bdds)
     positive_bdd.and(negative_bdd)
   }
-/*
-  def numToBDD(num: PredicateSymbol, clauses: List[DefiniteClause], b: BDDFactory): BDD = {
-    val attrs_data = num.attrs
-    val dep_clauses = NumPredicateLogic.generateCountedDefiniteClauses()
-    val indexes = dep_clauses.map{c => clauses.indexOf(c)}
-    val nodes = indexes.map{i => b.ithVar(i)}
-    val bdd = seqOr(nodes.toSeq)
-    bdd
-  }
-
-  def buildBDDFromNum(b: BDDFactory, num_literals: PredicateSymbol, clauses: List[DefiniteClause], positive_function: Int => Boolean, body_length: Int) = {
-    b.setVarNum(clauses.size)
-    var i = 0
-    var literal_bdd_map: Map[PredicateSymbol, BDD]
-    val label_bdds = num_literals.map{num_literal =>
-      val dep_clauses = generateCountedDefiniteClauses(num_literal)
-      val indexes = dep_clauses.map{c => clauses.indexOf(c)}
-      val nodes = indexes.map{i => b.ithVar(i)}
-
-      val bdd = dependentClauseToBDD(b, dep_clauses, clauses)
-      (positive_function(num), BDDMain.numToBDD(num,clauses,b))}
-  }
- */
 
   def numToBDD(b: BDDFactory, num_literal: PredicateSymbol, clauses: List[DefiniteClause], num_bdd_map: Map[PredicateSymbol, BDD]): BDD = {
 
@@ -226,14 +203,34 @@ object BDDMain extends BDDUtil with BDDAlgo{
             b.ithVar(clauses.indexOf(dep_clause))
           } else {
             val i = b.ithVar(clauses.indexOf(dep_clause))
-            val fs = body.map{ body_literal_num => num_bdd_map.getOrElse(body_literal_num, b.zero)}
+            val fs = body.map{ body_literal_num =>
+              body_literal_num match{
+                case PredicateSymbol(name, Const(num)) =>  num_bdd_map.getOrElse(body_literal_num, b.zero)
+                  // e(s(x)) <- e(x)のとき, pre: 1
+                  // F_{e(s^2(0))}を考えるとき head_num: 2
+                  // e(s(x))に代入x<-s(x)したF_{e(s(x))}をもってくる
+                case PredicateSymbol(name, NumVar(var_name, pre)) =>
+                  num_literal match{
+                    case PredicateSymbol(num_literal_name, Const(num_literal_num)) =>
+                      // headはdep_clause のhead <- body_1, ..., body_n
+                      // n > 1なので, headはPredicateSymbol(name, NumVar)のみ
+                      head match{
+                        case PredicateSymbol(head_name, NumVar(head_var_name, head_num)) =>
+                          // 代入する値は
+                          // F_{e(s^2(0))} = ... \/ (I_{e(s(x)) <- e(x)} /\ F_{e{s(0)}}) \/ ...
+                          // s(0) = s^2(0) - e(s(0))
+                          val diff_const = num_literal_num.toInt - head_num.toInt
+                          val substituted_const = Const((pre.toInt + diff_const).toString)
+                          num_bdd_map.getOrElse(PredicateSymbol(name, substituted_const), b.zero)
+                      }
+                  }
+              }
+            }
             seqAnd(List(List(i), fs).flatten)
           }
       }
     }
     val result = seqOr(or_operands)
-    println(num_literal)
-    result.printDot
     result
   }
 
@@ -252,17 +249,7 @@ object BDDMain extends BDDUtil with BDDAlgo{
     val negative_bdds = num_literals.filter{x => x match{
       case PredicateSymbol(name, Const(num)) => !positive_function(num.toInt)}}
       .map{n_lit => num_bdd_map.getOrElse(n_lit, b.zero)}
-
-//    positive_bdds.map{_.printDot}
     seqAnd(positive_bdds).and(seqAnd(negative_bdds.map{_.not}))
   }
 
 }
-/*  def BDDToHypothesises(bdd: BDD, clauses: List[DefiniteClause]) = {
-    val bools_array = bdd.allsat.map{x => x}.toList
-    bools_array.map{bools =>
-      val zipped = bools.zip(clauses)
-      zipped.filter{z => z._1 == 1}.map{x => x._2}
-    }
-  }*/
-
