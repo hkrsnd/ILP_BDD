@@ -71,19 +71,21 @@ object PredicateLogic extends SetUtil{
         case List() => true
         case predicate_symbols => predicate_symbols.map{predicate_symbol =>
           data.get(predicate_symbol.name) match {
-            case None => false
+            case None => println(predicate_symbol.name) ;false
             case Some(const) => const == predicate_symbol.terms.last
           }
         }.foldLeft(true){_ && _}
       }
     }.toSet
   }
-
+  
   def generateCountedDefiniteClauseBodies(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String): Set[Seq[PredicateSymbol]]
   = {
     val keys = attr_to_possible_values.map{_._1}
-//    val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
-    val key_powerset = powerSetWithSize(keys,body_length).filter{x => x.size <= body_length}
+//    println(keys)
+    //    val key_powerset = powerSet(keys).filter{x => x.size <= body_length}
+    val key_powerset = powerSetWithSize(keys,body_length).filter{x => x.size >= body_length}
+//    println(key_powerset)
     val key_and_values_powerset: Set[Set[(String,Set[Const])]] = key_powerset.map{key_set =>
       key_set.map{key =>
         (key, attr_to_possible_values.getOrElse(key, Set()))}
@@ -99,13 +101,13 @@ object PredicateLogic extends SetUtil{
           PredicateSymbol(keys_seq(i), Var("x"), values(i))
         }
       }
-    }
-
-    // rmeove nest
+ }
+    // remove nest
     var result_set: Set[Seq[PredicateSymbol]] = Set()
     counted_clauses.map{ ls =>
       ls.map{vec => result_set += vec}
     }
+    println(result_set)
     result_set
   }
 
@@ -117,12 +119,27 @@ object PredicateLogic extends SetUtil{
       body: _*)}
   }
 
+/*
+  def generateCountedDefiniteClauses(body_length: Int, attr_to_possible_values: Map[String, Set[Const]], positive_class_name: String): Set[DefiniteClause] = {
+    val keys = attr_to_possible_values.map{_._1}.toSeq
+    val values_list = seqCartesianProduct(attr_to_possible_values.map{_._2}.toSeq)
+    val bodies = values_list.map{ values =>
+      (0 to values.length -1).map{i =>
+        PredicateSymbol(keys(i), Var("x"), values(i))
+      }
+    }
+    bodies.map{ body =>
+    DefiniteClause(PredicateSymbol("class",Var("x"),Const(positive_class_name)),
+      body: _*)}.toSet
+  }
+ */
   def removeDontCareClauses(clauses: List[DefiniteClause], datas: List[RelationalData]): Set[DefiniteClause] = {
     val empty: Set[DefiniteClause] = Set()
     datas.map{data =>
       getDependentClauses(data.attrs,clauses)
     }.foldLeft(empty){_ union _}
   }
+
 
   def getCoveredDatasByClause(clause: DefiniteClause, data_list: List[RelationalData]): List[RelationalData] = {
     val body_symbols = clause.body

@@ -1,6 +1,7 @@
 body;hair,skin,scales,feather
-place;land,water
+place;land,water,air
 milk;yes,no
 egg;yes,no
 legs;0,2,4
 gill-breathing;yes,no
+warm-blood;yes,no

@@ -172,6 +172,7 @@ object BDDMain extends BDDUtil with BDDAlgo{
   def dataToBDD(data: RelationalData, clauses: List[DefiniteClause], b: BDDFactory): BDD = {
     val attrs_data = data.attrs
     val dep_clauses = PredicateLogic.getDependentClauses(attrs_data,clauses)
+
     val indexes = dep_clauses.map{c => clauses.indexOf(c)}
     val nodes = indexes.map{i => b.ithVar(i)}
     val bdd = seqOr(nodes.toSeq)
