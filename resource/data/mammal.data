@@ -1,4 +1,4 @@
-body,legs,milk,land,egg,gill-breathing,warm-blood
+body,legs,milk,place,egg,gill-breathing,warm-blood
 8
 hair,4,yes,land,no,no,yes,positive
 skin,0,yes,water,no,no,yes,positive
@@ -7,4 +7,4 @@ hair,2,yes,air,no,no,yes,positive
 scales,0,no,water,yes,yes,no,negative
 skin,0,no,water,yes,yes,no,negative
 scales,4,no,land,yes,no,no,negative
-feathers,2,no,air,yes,no,yes,negative
+feather,2,no,air,yes,no,yes,negative
